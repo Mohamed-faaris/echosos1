@@ -46,3 +46,8 @@ next-env.d.ts
 *.keystore
 /android/keystores/
 /android/keystore.properties
+
+# Monorepo workspace outputs
+**/node_modules/
+**/.next/
+**/.turbo/

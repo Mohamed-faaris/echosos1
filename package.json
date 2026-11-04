@@ -5,7 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "admin:dev": "turbo run dev --filter=@echosos/admin",
+    "admin:build": "turbo run build --filter=@echosos/admin",
+    "dev:all": "turbo run dev --parallel --filter=// --filter=@echosos/admin",
+    "build:all": "turbo run build --filter=// --filter=@echosos/admin",
+    "lint:all": "turbo run lint --filter=// --filter=@echosos/admin",
+    "typecheck:all": "turbo run typecheck --filter=// --filter=@echosos/admin"
   },
   "dependencies": {
     "@capacitor-community/bluetooth-le": "^8.3.0",
@@ -38,6 +45,7 @@
     "eslint-config-next": "16.4.3",
     "postcss": "^8.5.32",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "turbo": "^2.11.10"
   }
 }
