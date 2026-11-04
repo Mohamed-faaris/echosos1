@@ -22,7 +22,7 @@ cp apps/admin/.env.example apps/admin/.env.local
 pnpm admin:dev
 ```
 
-The admin app uses `http://localhost:3001`. Configure the shared development Convex deployment's server-side `SITE_URL` to the same origin. Keep the production deployment isolated.
+The admin app uses `http://localhost:3001`. Configure the shared development Convex deployment's server-side `SITE_URL` to the same origin. Keep the production deployment isolated. The first `pnpm install` must refresh `pnpm-lock.yaml` with the new workspace importer and Turbo dependency before using `--frozen-lockfile` in CI.
 
 ## Environment
 
