@@ -54,7 +54,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               >
                 <Icon size={17} />
                 {label}
-                {href === "/alerts" && <span className="ml-auto h-2 w-2 rounded-full bg-rose-500" />}
               </Link>
             );
           })}
