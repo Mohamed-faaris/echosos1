@@ -9,7 +9,6 @@ import {
   Radio,
   MapPin,
   Bell,
-  Moon,
   Info,
   LogOut,
   ChevronRight,
@@ -18,6 +17,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Moon,
 } from 'lucide-react';
 import { EchoLogo } from '@/components/ui/echo-logo';
 import { Button } from '@/components/ui/button';
@@ -199,7 +199,7 @@ export function SettingsScreen({ onNavigate, onLogout }: SettingsScreenProps) {
 
   const userInitials = user?.name
     ? user.name
-        .split('')
+        .split(/\s+/)
         .map((n) => n[0])
         .join('')
         .substring(0, 2)
@@ -220,12 +220,12 @@ export function SettingsScreen({ onNavigate, onLogout }: SettingsScreenProps) {
     {
       id: 'preferences',
       title: 'App Preferences',
-      subtitle: 'Language, theme and display settings',
+      subtitle: 'Personalise your app experience',
       icon: Sliders,
       iconColor: 'text-purple-600',
       bgColor: 'bg-purple-50/70',
       borderColor: 'border-purple-100',
-      action: () => setShowAccountDialog(true),
+      action: () => router.push('/settings/preferences'),
     },
     {
       id: 'beacon',
@@ -270,8 +270,8 @@ export function SettingsScreen({ onNavigate, onLogout }: SettingsScreenProps) {
           )}
           <EchoLogo size="sm" inline={true} />
         </div>
-        <Avatar className="w-8 h-8">
-          <AvatarFallback className="bg-[#0B3C85] text-white text-[10px] font-bold">
+        <Avatar className="w-10 h-10 rounded-full border-2 border-white shadow-sm ring-2 ring-[#0B3C85]/15">
+          <AvatarFallback className="rounded-full bg-[#0B3C85] text-white text-xs font-bold">
             {userInitials}
           </AvatarFallback>
         </Avatar>
@@ -358,7 +358,11 @@ export function SettingsScreen({ onNavigate, onLogout }: SettingsScreenProps) {
           <Switch checked={darkMode} onCheckedChange={handleDarkModeToggle} />
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-cyan-50/70 border border-cyan-100 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => router.push('/about')}
+          className="w-full text-left p-3.5 rounded-2xl bg-cyan-50/70 border border-cyan-100 flex items-center justify-between cursor-pointer hover:bg-cyan-100/70 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-300"
+        >
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-xl bg-white shadow-xs text-cyan-600">
               <Info className="w-4 h-4" />
@@ -371,12 +375,12 @@ export function SettingsScreen({ onNavigate, onLogout }: SettingsScreenProps) {
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-slate-400" />
-        </div>
+        </button>
 
         <Button
           type="button"
-          variant="destructive"
-          className="w-full bg-white border border-slate-200 text-red-500 flex items-center justify-center gap-2 font-bold py-2.5 rounded-xl shadow-md shadow-[#0B3C85]/20"
+          variant="outline"
+          className="w-full h-12 bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 hover:text-red-700 flex items-center justify-center gap-2 font-bold rounded-2xl shadow-none transition-colors"
           onClick={handleLogout}
           disabled={isLoggingOut}
         >

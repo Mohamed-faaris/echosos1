@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -31,7 +31,10 @@ export function HomeScreen({ onNavigate, onTriggerSOS }: HomeScreenProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [isTriggering, setIsTriggering] = useState(false);
+  const [isHoldingSOS, setIsHoldingSOS] = useState(false);
+  const sosHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [beacon, setBeacon] = useState<{ status?: string; device_name?: string; battery_percent?: number } | null>(null);
   const [geoStatus, setGeoStatus] = useState<'idle' | 'locating' | 'ready' | 'denied' | 'unavailable'>('idle');
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -48,6 +51,15 @@ export function HomeScreen({ onNavigate, onTriggerSOS }: HomeScreenProps) {
       .then((data) => {
         if (data.success && data.contacts) {
           setContacts(data.contacts);
+        }
+      })
+      .catch(() => {});
+
+    api
+      .getNotifications()
+      .then((data) => {
+        if (data.success && data.notifications) {
+          setUnreadNotifications(data.notifications.filter((item) => !item.is_read).length);
         }
       })
       .catch(() => {});
@@ -76,6 +88,28 @@ export function HomeScreen({ onNavigate, onTriggerSOS }: HomeScreenProps) {
     } else {
       setGeoStatus('unavailable');
     }
+  }, []);
+
+  const clearSOSHold = () => {
+    if (sosHoldTimer.current) {
+      clearTimeout(sosHoldTimer.current);
+      sosHoldTimer.current = null;
+    }
+    setIsHoldingSOS(false);
+  };
+
+  const startSOSHold = () => {
+    if (isTriggering || sosHoldTimer.current) return;
+    setIsHoldingSOS(true);
+    sosHoldTimer.current = setTimeout(() => {
+      sosHoldTimer.current = null;
+      setIsHoldingSOS(false);
+      void handleSOSTrigger();
+    }, 3000);
+  };
+
+  useEffect(() => () => {
+    if (sosHoldTimer.current) clearTimeout(sosHoldTimer.current);
   }, []);
 
   const handleSOSTrigger = async () => {
@@ -118,16 +152,33 @@ export function HomeScreen({ onNavigate, onTriggerSOS }: HomeScreenProps) {
       {/* Top Header */}
       <div className="flex items-center justify-between pt-1">
         <EchoLogo size="sm" inline={true} />
-        <button
-          onClick={() => onNavigate ? onNavigate('settings') : router.push('/settings')}
-          className="rounded-full ring-2 ring-[#0B3C85]/20 hover:ring-[#0B3C85] transition-all focus:outline-none"
-        >
-          <Avatar className="w-8 h-8">
-            <AvatarFallback className="bg-[#0B3C85] text-white font-bold text-xs">
-              {userInitials}
-            </AvatarFallback>
-          </Avatar>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate('notifications') : router.push('/notifications')}
+            aria-label="View notifications"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white border border-slate-200 text-[#0B3C85] shadow-sm transition-all hover:bg-blue-50 hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-[#0B3C85]/30"
+          >
+            <Bell className="h-5 w-5" />
+            {unreadNotifications > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-[#F4F8FF] bg-[#E52E3D] px-1 text-[9px] font-black leading-none text-white">
+                {unreadNotifications > 9 ? '9+' : unreadNotifications}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate ? onNavigate('settings') : router.push('/settings')}
+            aria-label="Open profile and settings"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white p-0.5 shadow-sm ring-2 ring-[#0B3C85]/20 transition-all hover:ring-[#0B3C85] focus:outline-none focus:ring-2 focus:ring-[#0B3C85]/50"
+          >
+            <Avatar className="h-9 w-9">
+              <AvatarFallback className="rounded-full bg-[#0B3C85] text-white font-bold text-xs">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </div>
       </div>
 
       {/* Greeting Card with dynamic user name */}
@@ -174,9 +225,22 @@ export function HomeScreen({ onNavigate, onTriggerSOS }: HomeScreenProps) {
               {/* Core SOS Button */}
               <button
                 type="button"
-                onClick={handleSOSTrigger}
+                onPointerDown={startSOSHold}
+                onPointerUp={clearSOSHold}
+                onPointerLeave={clearSOSHold}
+                onPointerCancel={clearSOSHold}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    startSOSHold();
+                  }
+                }}
+                onKeyUp={clearSOSHold}
+                onBlur={clearSOSHold}
+                onContextMenu={(event) => event.preventDefault()}
                 disabled={isTriggering}
-                className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#c41c2a] via-[#E52E3D] to-[#ff4d5c] shadow-xl shadow-[#E52E3D]/50 flex flex-col items-center justify-center text-white cursor-pointer active:scale-95 transition-transform animate-pulse-glow disabled:opacity-80"
+                aria-label="Hold for 3 seconds to activate SOS"
+                className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#c41c2a] via-[#E52E3D] to-[#ff4d5c] shadow-xl shadow-[#E52E3D]/50 flex flex-col items-center justify-center text-white cursor-pointer active:scale-95 transition-transform animate-pulse-glow disabled:opacity-80 touch-none select-none"
               >
                 {isTriggering ? (
                   <Loader2 className="w-7 h-7 animate-spin" />
@@ -184,7 +248,7 @@ export function HomeScreen({ onNavigate, onTriggerSOS }: HomeScreenProps) {
                   <>
                     <Bell className="w-7 h-7 drop-shadow-md stroke-[2.5]" />
                     <span className="text-base font-black tracking-wider drop-shadow-md mt-0.5">
-                      SOS
+                      {isHoldingSOS ? 'HOLD…' : 'SOS'}
                     </span>
                   </>
                 )}
@@ -193,7 +257,7 @@ export function HomeScreen({ onNavigate, onTriggerSOS }: HomeScreenProps) {
           </div>
         </div>
         <p className="text-xs font-semibold text-slate-500 mt-3 tracking-wide">
-          Press in case of emergency
+          {isHoldingSOS ? 'Keep holding… 3 seconds' : 'Hold for 3 seconds to activate SOS'}
         </p>
       </div>
 
