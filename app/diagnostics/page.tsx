@@ -33,14 +33,19 @@ export function DiagnosticsScreen() {
     setIsTesting(true);
 
     try {
-      const { BackgroundBLEScanner } = await import('@/lib/ble-background-scanner');
-      const scanner = new BackgroundBLEScanner();
-      await scanner.requestPermissions();
-      const available = await scanner.isAvailable();
+      const {
+        isNativeBackgroundMonitorAvailable,
+        startBackgroundMonitoring,
+      } = await import('@/lib/background-monitor');
+
+      const available = isNativeBackgroundMonitorAvailable();
+      if (available) {
+        await startBackgroundMonitoring();
+      }
       setResults((prev) =>
         prev.map((r) =>
           r.name === 'BLE Scanner'
-            ? { ...r, status: available ? 'pass' : 'fail', detail: available ? 'BLE available' : 'BLE unavailable' }
+            ? { ...r, status: available ? 'pass' : 'fail', detail: available ? 'Native background monitoring started' : 'Android BLE monitoring unavailable' }
             : r
         )
       );
