@@ -38,8 +38,9 @@
     "out/types/**/*.ts",
     "out/dev/types/**/*.ts"
   ],
-    "exclude": [
-      "node_modules",
-      "app/src/main/assets/**"
-    ]
+  "exclude": [
+    "node_modules",
+    "app/src/main/assets/**",
+    "apps/admin/**"
+  ]
 }
